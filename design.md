@@ -95,7 +95,7 @@ Since we are not going to use any database to store the information. We use Hash
 
 # TLS Configuration
 
-We use TLS 1.3. Cipher suites are standardized and will be used by default.
+We use TLS 1.3. Cipher suites are standardized and will be used by default. I thought we should save username and token for the request, but that will make the system more complicated. I just keep the certificate for security.
 Certificate Setup
 Server requires:
 
