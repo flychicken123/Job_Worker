@@ -12,7 +12,7 @@ The solution includes asynchronous process execution, job status tracking, and A
 
 # Scope
 
-Start/stop jobs with configurable commands, arguments, and environment variables.
+Start/stop jobs with configurable commands, arguments.
 
 Track job status (e.g., running, exited).
 
