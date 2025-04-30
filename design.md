@@ -34,7 +34,7 @@ The system provides a set of API endpoints to:
 2. Monitor job status.
 3. Stream job output.
 4. Stop running jobs.
-5. Jobs are managed in memory and executed asynchronously in isolated Linux processes with configurable runtime constraints.
+5. Jobs are managed in memory and executed asynchronously in isolated Linux processe.
 
 # Architecture
 ```mermaid
@@ -55,9 +55,9 @@ flowchart LR
 
 service JobService {
   rpc StartJob(StartJobRequest) returns (StartJobResponse);
-  rpc StopJob(JobRequest) returns (JobResponse);
-  rpc GetStatus(JobRequest) returns (JobStatusResponse);
-  rpc StreamOutput(JobRequest) returns (stream JobOutputChunk);
+  rpc StopJob(StopJobRequest) returns (JobResponse);
+  rpc GetStatus(GetJobRequest) returns (JobStatusResponse);
+  rpc StreamOutput(StreamJobRequest) returns (stream JobOutputChunk);
 }
 
 message StartJobRequest {
@@ -69,7 +69,15 @@ message StartJobResponse {
   string job_id = 1;
 }
 
-message JobRequest {
+message GetJobRequest {
+  string job_id = 1;
+}
+
+message StopJobRequest {
+  string job_id = 1;
+}
+
+message StreamJobRequest {
   string job_id = 1;
 }
 
@@ -132,6 +140,10 @@ Each job will be placed into its own cgroup, with configurable limits for:
 
 3. Disk IO (e.g., read/write bandwidth and IOPS)
 
+CPU Control file: /sys/fs/cgroup/<job_id>/cpu.max
+Memory Control file: /sys/fs/cgroup/<job_id>/memory.max
+IO Control file: /sys/fs/cgroup/<job_id>/io.max
+
 cgroups Setup
 
 The API server will programmatically create a new cgroup for each job under a fixed cgroup hierarchy (e.g., /sys/fs/cgroup/worker_jobs/).
@@ -140,3 +152,33 @@ Each job will have a unique sub-cgroup named after its job_id.
 
 After starting the Linux process, the server assigns the process PID to its corresponding cgroup.
 
+
+# CLI UX
+Server
+jobd \
+  --listen-address=0.0.0.0:8443 \
+  --tls-cert=./certs/server.crt \
+  --tls-key=./certs/server.key \
+  --tls-ca=./certs/ca.crt \
+  --cgroup-root=/sys/fs/cgroup/worker_jobs
+
+
+Client 
+
+Start 
+
+jobctl start \
+  --command /usr/bin/python3 \
+  --args script.py \
+  --tls-cert=./certs/client.crt \
+  --tls-key=./certs/client.key \
+  --tls-ca=./certs/ca.crt
+
+Check
+jobctl status --job-id abc123
+
+Stream
+jobctl stream --job-id abc123 --stream stdout
+
+Stop
+jobctl stop --job-id abc123
